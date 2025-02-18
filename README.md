@@ -13,7 +13,7 @@ This repository contains the model, API, and UI for ReceiptLogger.
 1. Clone the repository
 
 ```zsh
-git clone git@github.com:jjpark987/codescript-backend.git
+git clone git@github.com:jjpark987/receiptlogger.git
 ```
 
 2. Create a virtual environment if there isn't one already
