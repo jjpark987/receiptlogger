@@ -42,6 +42,9 @@ uvicorn app.main:app --host 0.0.0.0 --port 80
 
 The API should now be running at http://0.0.0.0:80.
 
+## Paddlepaddle
+python -m pip install paddlepaddle==3.0.0rc1 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
+
 <!-- ## Alebmic Version Control
 
 This project uses Alembic for managing database migrations and version control. Whenever there are updates to the database models, we must create and apply a migration to ensure that the database schema remains in sync with the application’s data structures.
