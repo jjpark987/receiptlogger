@@ -6,7 +6,7 @@ This repository contains the model, API, and UI for ReceiptLogger.
 
 ### Prerequisites
 
-- Python 3.10+
+- Python 3.12.9
 
 ### Installation
 
@@ -19,7 +19,7 @@ git clone git@github.com:jjpark987/receiptlogger.git
 2. Create a virtual environment if there isn't one already
 
 ```zsh
-python -m venv .venv
+/opt/homebrew/opt/python@3.12/bin/python3.12 -m venv .venv
 ```
 
 3. Activate virtual environment
@@ -42,8 +42,13 @@ uvicorn app.main:app --host 0.0.0.0 --port 80
 
 The API should now be running at http://0.0.0.0:80.
 
-## Paddlepaddle
-python -m pip install paddlepaddle==3.0.0rc1 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
+## PaddlePaddle
+
+- This model requires paddlepaddle
+
+```zsh
+python -m pip install paddlepaddle==3.0.0b1 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
+```
 
 <!-- ## Alebmic Version Control
 

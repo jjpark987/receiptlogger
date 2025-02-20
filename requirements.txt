@@ -9,8 +9,9 @@ paddleocr>=2.9.1
 # pillow>=11.1.0
 
 # FastAPI
-# fastapi>=0.115.6
-# uvicorn>=0.34.0
+fastapi>=0.115.6
+python-multipart>=0.0.20
+uvicorn>=0.34.0
 
 # Docker
 # cryptography>=44.0.0
