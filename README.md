@@ -34,6 +34,12 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+5. Install paddlepaddle
+
+```zsh
+python -m pip install paddlepaddle==3.0.0b1 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
+```
+
 5. Run API server
 
 ```zsh
@@ -42,13 +48,13 @@ uvicorn app.main:app --host 0.0.0.0 --port 80
 
 The API should now be running at http://0.0.0.0:80.
 
-## PaddlePaddle
-
-- This model requires paddlepaddle
+6. Run Tkinter NEED BREW TCL-TK!!!!!!!!!!
 
 ```zsh
-python -m pip install paddlepaddle==3.0.0b1 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
+python -m app.tk
 ```
+
+
 
 <!-- ## Alebmic Version Control
 

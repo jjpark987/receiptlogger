@@ -1,5 +1,5 @@
-from ocr.receipt_types.ross import parse_ross_receipt
-from ocr.receipt_types.tjx import parse_tjx_receipt
+from app.receipt_types.ross import parse_ross_receipt
+from app.receipt_types.tjx import parse_tjx_receipt
 
 def extract_data(response):
     store = ''
@@ -21,6 +21,7 @@ def extract_data(response):
         receipt_data = parse_ross_receipt(response[0])
         receipt_data['store'] = store    
     else:
-        print('❓ Could not find receipt store')
+        print('🚨 Could not extract')
+        return {}
 
     return receipt_data

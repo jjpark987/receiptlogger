@@ -1,17 +1,16 @@
-# Python
-python-dotenv>=1.0.1
+# FastAPI
+# fastapi>=0.115.6
+# python-dotenv>=1.0.1
+# python-multipart>=0.0.20
+# requests>=2.32.3
+# uvicorn>=0.34.0
 
 # OCR
-ipykernel>=6.29.5
-ipywidgets>=8.1.5
-notebook>=7.3.2
+# ipykernel>=6.29.5
+# ipywidgets>=8.1.5
+# notebook>=7.3.2
 paddleocr>=2.9.1
-# pillow>=11.1.0
-
-# FastAPI
-fastapi>=0.115.6
-python-multipart>=0.0.20
-uvicorn>=0.34.0
+pillow>=11.1.0
 
 # Docker
 # cryptography>=44.0.0
