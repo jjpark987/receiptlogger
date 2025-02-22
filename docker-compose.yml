@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    container_name: receiptlogger
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

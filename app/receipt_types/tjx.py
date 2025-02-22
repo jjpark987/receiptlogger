@@ -3,6 +3,7 @@ import re
 PRICE_PATTERN = r'^\$(\d+\.\d{2})$'
 STANDALONE_SKU_PATTERN = r'^\d{6}$'
 ATTACHED_SKU_PATTERN = r'^(.+?)(\d{6})$'
+SALES_TAX_PATTERN = r'(\d+\.\d+)%'
 DATE_PATTERN = r'(\d{2}/\d{2}/\d{4})'
 
 def parse_tjx_receipt(receipt: list) -> dict:
@@ -10,6 +11,7 @@ def parse_tjx_receipt(receipt: list) -> dict:
     location = ''
     items = []
     subtotal = 0.0
+    tax_rate = 0.0
     tax = 0.0
     total = 0.0
 
@@ -44,26 +46,28 @@ def parse_tjx_receipt(receipt: list) -> dict:
                     items.append({
                             'sku': match.group(2).strip() , 
                             'name': match.group(1).strip(), 
-                            'price': price
+                            'price': round(price, 2)
                         })
                 elif 'subtotal' in prev_line:
-                    subtotal = price
+                    subtotal = round(price, 2)
                 elif 'tax' in prev_line:
-                    tax = price
+                    tax_rate = round(float(re.search(SALES_TAX_PATTERN, prev_line).group(1).strip()) / 100, 4)
+                    tax = round(price, 2)
                 elif 'total' in prev_line:
-                    total = price
+                    total = round(price, 2)
 
         date_match = re.search(DATE_PATTERN, text)
         if date_match:
-            date = date_match.group(1)
+            date = date_match.group(1).strip()
 
         i += 1 
 
     return {
         'location': location,
         'items': items,
-        'subtotal': round(subtotal, 2),
-        'tax': round(tax, 2),
-        'total': round(total, 2),
+        'subtotal': subtotal,
+        'tax_rate': tax_rate,
+        'tax': tax,
+        'total': total,
         'date': date
     }

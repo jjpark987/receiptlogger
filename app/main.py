@@ -1,9 +1,16 @@
+import customtkinter as ctk
+import gspread
 import os
-import tkinter as tk
-from paddleocr import PaddleOCR
+import subprocess
+import traceback
+from datetime import datetime
+from dotenv import load_dotenv
+from google.oauth2.service_account import Credentials
+# from paddleocr import PaddleOCR
 from PIL import Image, ImageTk
-from tkinter import Label, Frame, Canvas, Scrollbar
-from app.extract import extract_data
+from app.process_data import process
+
+load_dotenv()
 
 class ReceiptLogger:
     def __init__(self, root):
@@ -17,6 +24,7 @@ class ReceiptLogger:
         self.root.title('ReceiptLogger')
         self.receipts_folder = os.path.join(os.path.expanduser('~'), 'Desktop', 'PUT YO RECEIPTS HERE')
         self.image_refs = []
+        self.receipt_data_refs = []
 
     def center_window(self, width, height):
         screen_width = self.root.winfo_screenwidth()
@@ -26,62 +34,35 @@ class ReceiptLogger:
         self.root.geometry(f'{width}x{height}+{x}+{y}')
 
     def create_ui(self):
-        # Create Folder Button
-        self.create_folder_btn = tk.Button(self.root, text='Create Folder', command=self.create_folder)
-        self.create_folder_btn.pack(pady=10)
+        # create folder button
+        self.create_folder_btn = ctk.CTkButton(self.root, text='Create Folder', command=self.create_folder)
+        self.create_folder_btn.pack(pady=20)
 
-        # Status Label
-        self.status_label = tk.Label(self.root, text='', fg='green')
+        # status label
+        self.status_label = ctk.CTkLabel(self.root, text='')
         self.status_label.pack(pady=10)
 
-        # Extract Receipts Button
-        self.run_paddleocr_btn = tk.Button(self.root, text='Extract Receipts', command=self.extract_receipts)
-        self.run_paddleocr_btn.pack(pady=10)
+        # extract receipt button
+        self.extract_receipts_btn = ctk.CTkButton(self.root, text='Extract Receipts', command=self.extract_receipts)
+        self.extract_receipts_btn.pack(pady=10)
 
-        # Create a display frame for receipts
-        display_frame = Frame(self.root, bg='white', width=1000, height=550)
-        display_frame.pack_propagate(False)
-        display_frame.pack(pady=10)
+        # scrollable frame for displaying receipts
+        self.scroll_frame = ctk.CTkScrollableFrame(self.root, width=1000, height=500)
+        self.scroll_frame.pack(pady=10, fill='both', expand=True)
 
-
-
-
-
-        # Scrollable Canvas inside display_frame
-        self.scroll_canvas = Canvas(display_frame, bg='white', width=1000, height=550)
-        
-        # Scrollbar (define first)
-        scrollbar = Scrollbar(display_frame, orient='vertical', command=self.scroll_canvas.yview)
-        scrollbar.pack(side='right', fill='y')
-        self.scroll_canvas.configure(yscrollcommand=scrollbar.set)
-
-        # Scrollable Frame (must be defined before `create_window`)
-        self.scroll_frame = Frame(self.scroll_canvas, bg='white')
-
-        # Add scroll_frame inside scroll_canvas
-        self.scroll_canvas.create_window((0, 0), window=self.scroll_frame, anchor='nw')
-        self.scroll_canvas.pack(side='left', fill='both', expand=True)
-
-        # Adjust scrolling region when content expands
-        self.scroll_frame.bind('<Configure>', lambda e: self.scroll_canvas.configure(scrollregion=self.scroll_canvas.bbox('all')))
-
-
-
-
-
-        # Create Sheets Button
-        self.create_sheets_btn = tk.Button(self.root, text='Create Sheets', command=self.create_sheets)
-        self.create_sheets_btn.pack(pady=10)
+        # upload to google sheets button
+        self.upload_data_btn = ctk.CTkButton(self.root, text='Upload Data', command=self.upload_data)
+        self.upload_data_btn.pack(pady=20)
 
     def create_folder(self):
         if os.path.exists(self.receipts_folder):
-            self.status_label.config(text='✅ The folder already exists', fg='green')
+            self.status_label.configure(text='✅ The folder already exists')
         else:
             try:
                 os.makedirs(self.receipts_folder)
-                self.status_label.config(text=f'✅ Folder created: {self.receipts_folder}', fg='green')
+                self.status_label.configure(text=f'✅ Folder created: {self.receipts_folder}')
             except Exception as e:
-                self.status_label.config(text=f'❌ Error creating folder: {str(e)}', fg='red')
+                self.status_label.configure(text=f'❌ Error creating folder: {str(e)}')
 
     def extract_receipts(self):
         for widget in self.scroll_frame.winfo_children():
@@ -90,85 +71,178 @@ class ReceiptLogger:
         self.image_refs.clear()
 
         if not os.path.exists(self.receipts_folder):
-            self.status_label.config(text='❌ Receipts folder not found', fg='red')
+            self.status_label.configure(text='❌ Receipts folder not found')
             return
 
         image_files = [os.path.join(self.receipts_folder, f) for f in os.listdir(self.receipts_folder) if f.lower().endswith('.png')]
-        self.status_label.config(text=f'✅ Found {len(image_files)} receipts.', fg='green')
+        self.status_label.configure(text=f'✅ Found {len(image_files)} receipts')
+
+        def run_ocr(img_path):
+            command = f'docker exec receiptlogger python3 -m paddleocr --image_dir {img_path} --use_angle_cls true'
+            result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            return result.stdout
 
         for img_path in image_files:
-            # try:
-            #     raw_data = self.ocr.ocr(img_path, cls=True)
-            #     receipt_data = extract_data(raw_data) if raw_data else {}
-            # except Exception as e:
-            #     self.status_label.config(text=f'❌ Error processing receipt: {str(e)}', fg='red')
-            #     receipt_data = {}
-            receipt_data = {
-                'store': 'SuperMart',
-                'location': 'Seatac Village',
-                'date': '2024-02-20',
-                'items': [
-                    {'name': 'Apples', 'price': 3.50},
-                    {'name': 'Milk', 'price': 2.99},
-                    {'name': 'Bread', 'price': 2.50}
-                ],
-                'subtotal': 8.99,
-                'tax': 0.72,
-                'total': 9.71
-            }
+            try:
+                ocr_output = run_ocr(img_path) 
+                receipt_data = process(ocr_output) 
+            except Exception as e:
+                self.status_label.configure(text=f'❌ Error processing receipts: {str(e)}')
+                return
             self.display(img_path, receipt_data)
 
     def display(self, img_path, receipt_data):
-        # Create a container
-        container = Frame(self.scroll_frame, bg='white')
+        container = ctk.CTkFrame(self.scroll_frame)
         container.pack(pady=10, padx=10, anchor='center', fill='both', expand=True)
 
-        # Left Side: Image Display
-        img_frame = Frame(container, bg='white', width=500, height=500)
+        # image
+        img_frame = ctk.CTkFrame(container, width=500, height=500, corner_radius=10)
         img_frame.pack_propagate(False)
         img_frame.pack(side='left', padx=10, pady=10, fill='y')
 
         img = Image.open(img_path)
-        img = img.resize((500, 500))
+        img.thumbnail((500, 500))
         img_tk = ImageTk.PhotoImage(img)
-        img_label = Label(img_frame, image=img_tk, bg='white')
-        img_label.image = img_tk 
+        self.image_refs.append(img_tk)
+
+        img_label = ctk.CTkLabel(img_frame, image=img_tk, text='')
         img_label.pack()
+        img_label.image = img_tk
+        img_label.bind('<Button-1>', lambda event, path=img_path: self.open_zoomed_image(path))
 
-        # Right Side: Receipt Data Display
-        data_frame = Frame(container, bg='white', width=500, height=500)
+        # receipt data
+        self.receipt_data_refs.append(receipt_data)
+        data_frame = ctk.CTkFrame(container, width=500, height=500, corner_radius=0)
         data_frame.pack_propagate(False)
-        data_frame.pack(side='right', padx=10, pady=10, fill='y')
+        data_frame.pack(side='right', padx=10, pady=10, fill='both', expand=True)
 
-        date_label = Label(data_frame, text=f'📅 Date: {receipt_data.get('date', 'Unknown')}', fg='black', bg='white', font=('Arial', 12), anchor='w', width=50)
-        date_label.pack(pady=5, padx=10, anchor='w')
+        if not receipt_data:
+            image = Image.open('static/no_data.jpeg') 
+            image = image.resize((400, 400)) 
+            ctk_image = ctk.CTkImage(light_image=image, dark_image=image, size=(400, 400))
 
-        store_label = Label(data_frame, text=f'🛒 Store: {receipt_data.get('store', 'Unknown')}', fg='black', bg='white', font=('Arial', 12), anchor='w', width=50)
-        store_label.pack(pady=5, padx=10, anchor='w')
+            label = ctk.CTkLabel(data_frame, image=ctk_image, text='')
+            label.pack(expand=True)
+            return
 
-        location_label = Label(data_frame, text=f'📍 Location: {receipt_data.get('location', 'Unknown')}', fg='black', bg='white', font=('Arial', 12), anchor='w', width=50)
-        location_label.pack(pady=5, padx=10, anchor='w')
+        data_frame.grid_columnconfigure(0, weight=2)
+        data_frame.grid_columnconfigure(1, weight=1)
+        data_frame.grid_columnconfigure(2, weight=1)
 
-        items_label = Label(data_frame, text='🛍️ Items Purchased:', fg='black', bg='white', font=('Arial', 12), anchor='w', width=50)
-        items_label.pack(pady=5, padx=10, anchor='w')
-        for item in receipt_data.get('items', []):
-            item_label = Label(data_frame, text=f'- {item['name']}: ${item['price']:.2f}', fg='black', bg='white', font=('Arial', 10), anchor='w', width=50)
-            item_label.pack(pady=2, padx=10, anchor='w')
+        date_label = ctk.CTkLabel(data_frame, text=f'📅 {receipt_data.get('date', 'N/A')}', font=('Arial', 12), anchor='w')
+        date_label.grid(row=0, column=0, columnspan=3, sticky='w', padx=10, pady=3)
 
-        subtotal_label = Label(data_frame, text=f'💰 Subtotal: ${receipt_data.get('subtotal', 0.00):.2f}', fg='black', bg='white', font=('Arial', 12), anchor='w', width=50)
-        subtotal_label.pack(pady=2, padx=10, anchor='w')
+        store_label = ctk.CTkLabel(data_frame, text=f'🛒 {receipt_data.get('store', 'N/A')}', font=('Arial', 12), anchor='w')
+        store_label.grid(row=1, column=0, columnspan=3, sticky='w', padx=10, pady=3)
 
-        tax_label = Label(data_frame, text=f'💵 Tax: ${receipt_data.get('tax', 0.00):.2f}', fg='black', bg='white', font=('Arial', 12), anchor='w', width=50)
-        tax_label.pack(pady=2, padx=10, anchor='w')
+        for i, item in enumerate(receipt_data.get('items', []), start=4):
+            ctk.CTkLabel(data_frame, text=f'       {item['sku']}   {item['name']}', font=('Arial', 10), anchor='w').grid(
+                row=i, column=0, sticky='w', padx=10, pady=2)  
+            ctk.CTkLabel(data_frame, text=f'${item['price']:.2f}', font=('Arial', 10), anchor='e').grid(
+                row=i, column=1, sticky='e', padx=10, pady=2)
+            ctk.CTkLabel(data_frame, text=f'${item['taxed']:.2f}', font=('Arial', 10), anchor='e').grid(
+                row=i, column=2, sticky='e', padx=10, pady=2)
 
-        total_label = Label(data_frame, text=f'✅ Total: ${receipt_data.get('total', 0.00):.2f}', fg='black', bg='white', font=('Arial', 12, 'bold'), anchor='w', width=50)
-        total_label.pack(pady=5, padx=10, anchor='w')
+        tax_rate_label = ctk.CTkLabel(data_frame, text=f'📈 Tax Rate:', font=('Arial', 12), anchor='w')
+        tax_rate_label.grid(row=i+1, column=0, sticky='ew', padx=10, pady=3)
+        tax_rate_value = ctk.CTkLabel(data_frame, text=f'{round(receipt_data.get('tax_rate', 0.00) * 100, 2)}%', font=('Arial', 12), anchor='e')
+        tax_rate_value.grid(row=i+1, column=2, sticky='ew', padx=10, pady=3)
 
-    def create_sheets(self):
-        ''' Placeholder function for exporting data to Google Sheets '''
-        self.status_label.config(text='📤 Creating Google Sheets (Feature Not Implemented)', fg='green')
+        tax_label = ctk.CTkLabel(data_frame, text=f'⚖️ Tax:', font=('Arial', 12), anchor='w')
+        tax_label.grid(row=i+2, column=0, sticky='ew', padx=10, pady=3)
+        tax_value = ctk.CTkLabel(data_frame, text=f'${receipt_data.get('tax', 0.00):.2f}', font=('Arial', 12), anchor='e')
+        tax_value.grid(row=i+2, column=2, sticky='ew', padx=10, pady=3)
+
+        total_label = ctk.CTkLabel(data_frame, text=f'✅ Total:', font=('Arial', 12, 'bold'), anchor='w')
+        total_label.grid(row=i+3, column=0, sticky='ew', padx=10, pady=5)
+        total_value = ctk.CTkLabel(data_frame, text=f'${receipt_data.get('total', 0.00):.2f}', font=('Arial', 12, 'bold'), anchor='e')
+        total_value.grid(row=i+3, column=2, sticky='ew', padx=10, pady=5)
+    
+    def open_zoomed_image(self, img_path):
+        zoom_popup = ctk.CTkToplevel(self.root)
+        zoom_popup.title('Zoomed Receipt')
+        zoom_popup.geometry('800x800')
+
+        img = Image.open(img_path) 
+        img.thumbnail((800, 800))
+        img_tk = ImageTk.PhotoImage(img)
+
+        label = ctk.CTkLabel(zoom_popup, image=img_tk, text='') 
+        label.pack(expand=True) 
+        label.image = img_tk
+
+    def upload_data(self):
+        if not self.receipt_data_refs:
+            self.status_label.configure(text='⚠️ Extract receipts before uploading')
+            return
+
+        self.status_label.configure(text='📤 Uploading to Google Sheets...')
+
+        # authenticate and prepare data to append
+        credentials = os.getenv('GOOGLE_KEY')
+        sheet_id = os.getenv('SPREADSHEET_ID')
+        worksheet_name = os.getenv('WORKSHEET_NAME')
+        if not credentials:
+            self.status_label.configure(text='❌ Google Service Key not found in .env')
+            return
+        try:
+            creds = Credentials.from_service_account_file(credentials, scopes=['https://www.googleapis.com/auth/spreadsheets'])
+            sheet = gspread.authorize(creds).open_by_key(sheet_id)
+            worksheet = sheet.worksheet(worksheet_name)
+
+            print(f'✅ Successfully connected to Google Sheet: {sheet.title}')
+            self.status_label.configure(text=f'✅ Connected to Google Sheets "{sheet.title}"')
+
+            rows_to_append = []
+            for receipt in self.receipt_data_refs:
+                store = receipt['store']
+                date = datetime.strptime(receipt['date'], '%m/%d/%Y' if len(receipt['date']) == 10 else '%m/%d/%y').strftime('%m/%d/%y')
+                tax_rate = receipt['tax_rate']
+                item_map = {}
+
+                for item in receipt['items']:
+                    sku = item['sku']
+                    if sku not in item_map:
+                        item_map[sku] = {
+                            'name': item['name'],
+                            'quantity': 1,
+                            'price': item['price'], 
+                            'taxed': item['taxed']
+                        }
+                    else:
+                        item_map[sku]['quantity'] += 1
+
+                rows_to_append.extend([
+                    [
+                        store,
+                        date,
+                        sku,
+                        data['quantity'],
+                        data['name'],
+                        data['price'],
+                        tax_rate,
+                        data['taxed']
+                    ]
+                    for sku, data in item_map.items()
+                ])
+
+            # append to google sheets
+            if rows_to_append:
+                next_empty_row = len(worksheet.get_all_values()) + 1
+                worksheet.insert_rows(rows_to_append, row=next_empty_row, value_input_option='USER_ENTERED')
+
+                print(f'✅ Successfully added {len(rows_to_append)} rows to Google Sheets')
+                self.status_label.configure(text=f'✅ Uploaded {len(rows_to_append)} rows to Google Sheets')
+            else:
+                print('⚠️ No data to upload')
+                self.status_label.configure(text='⚠️ No data to upload')
+
+        except Exception as e:
+            # traceback.print_exc()
+            print(f'❌ Google Sheets connection error: {e}')
+            self.status_label.configure(text='❌ Google Sheets authentication failed')
 
 if __name__ == '__main__':
-    root = tk.Tk()
+    root = ctk.CTk()
     app = ReceiptLogger(root)
     root.mainloop()

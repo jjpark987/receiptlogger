@@ -2,6 +2,7 @@ import re
 
 ITEM_PATTERN = r'^(\d+)\s+([a-z0-9 .-]+)$'          
 PRICE_PATTERN = r'^(-?)\$(\d+\.\d{2})[a-z]?$' 
+SALES_TAX_PATTERN = r'(\d+\.\d+)%'
 DATE_PATTERN = r'^date:\s*(\d{2}/\d{2}/\d{2})'
 
 def find_price_next_line(receipt: list, i: int) -> float:
@@ -18,9 +19,10 @@ def parse_ross_receipt(receipt: list) -> dict:
     date = ''
     location = ''
     items = []
-    subtotal = 0
-    tax = 0
-    total = 0
+    subtotal = 0.0
+    tax_rate = 0.0
+    tax = 0.0
+    total = 0.0
 
     skip = False
     i = 0
@@ -56,7 +58,8 @@ def parse_ross_receipt(receipt: list) -> dict:
             subtotal = find_price_next_line(receipt, i)
 
         if 'tax' in text:
-            tax += find_price_next_line(receipt, i)
+            tax_rate = round(float(re.search(SALES_TAX_PATTERN, text).group(1).strip()) / 100, 4)
+            tax += round(find_price_next_line(receipt, i), 2)
 
         if 'total' in text:
             total = find_price_next_line(receipt, i)
@@ -71,7 +74,8 @@ def parse_ross_receipt(receipt: list) -> dict:
         'location': location,
         'items': items,
         'subtotal': subtotal,
-        'tax': round(tax, 2),
+        'tax_rate': tax_rate,
+        'tax': tax,
         'total': total,
         'date': date
     }

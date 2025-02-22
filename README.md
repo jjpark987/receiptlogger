@@ -16,94 +16,50 @@ This repository contains the model, API, and UI for ReceiptLogger.
 git clone git@github.com:jjpark987/receiptlogger.git
 ```
 
-2. Create a virtual environment if there isn't one already
+2. Install Tcl-Tk for Tkinter
+
+```zsh
+brew install tcl-tk
+```
+
+3. Create a virtual environment if there isn't one already
 
 ```zsh
 /opt/homebrew/opt/python@3.12/bin/python3.12 -m venv .venv
 ```
 
-3. Activate virtual environment
+4. Activate virtual environment
 
 ```zsh
 source .venv/bin/activate
 ```
 
-4. Install dependencies
+5. Install dependencies
 
 ```zsh
 pip install -r requirements.txt
 ```
 
-5. Install paddlepaddle
+6. Install PaddlePaddle for PaddleOCR
 
 ```zsh
 python -m pip install paddlepaddle==3.0.0b1 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
 ```
 
-5. Run API server
+6. Run ReceiptLogger
 
 ```zsh
-uvicorn app.main:app --host 0.0.0.0 --port 80
+python -m app.main
 ```
 
-The API should now be running at http://0.0.0.0:80.
+### Google Sheets Authentication
 
-6. Run Tkinter NEED BREW TCL-TK!!!!!!!!!!
+1. Create a new project and enable Google Sheets API
 
-```zsh
-python -m app.tk
-```
+2. Create a new service account for this project
 
+3. Create a new json key for this service account
 
+4. Ensure directory has .env with GOOGLE_KEY, SPREADSHEET_ID, and WORKSHEET_NAME
 
-<!-- ## Alebmic Version Control
-
-This project uses Alembic for managing database migrations and version control. Whenever there are updates to the database models, we must create and apply a migration to ensure that the database schema remains in sync with the application’s data structures.
-
-1. Create migration
-
-```zsh
-alembic revision --autogenerate -m "Migration message"
-```
-
-2. Migrate
-
-```zsh
-alembic upgrade head
-```
-
-## Seeding Database
-
-To seed the database with:
-- 3 categories (data manipulations, combinatorics, optimizations)
-- subcategories for each category
-
-- Make sure MySQL database server is up and migrated with the latest migration
-
-- Seed database
-
-```zsh
-python -m app.seed
-```
-
-## Docker
-
-### Commands
-
-- Build image and create container in the foreground
-
-```zsh
-docker compose up --build
-```
-
-- List all containers
-
-```zsh
-docker ps -a
-```
-
-- Prune all stopped containers
-
-```zsh
-docker container prune -f
-``` -->
+5. Give Editor access to client_email from .google_key.json on Google Sheet
