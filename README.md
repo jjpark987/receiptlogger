@@ -16,10 +16,10 @@ This repository contains the model, API, and UI for ReceiptLogger.
 git clone git@github.com:jjpark987/receiptlogger.git
 ```
 
-2. Install Tcl-Tk for Tkinter
+2. Install system dependencies
 
 ```zsh
-brew install tcl-tk
+brew install tcl-tk@8
 ```
 
 3. Create a virtual environment if there isn't one already
@@ -28,13 +28,17 @@ brew install tcl-tk
 /opt/homebrew/opt/python@3.12/bin/python3.12 -m venv .venv
 ```
 
+```zsh
+/usr/local/opt/python@3.12/bin/python3.12 -m venv .venv
+```
+
 4. Activate virtual environment
 
 ```zsh
 source .venv/bin/activate
 ```
 
-5. Install dependencies
+5. Install project dependencies
 
 ```zsh
 pip install -r requirements.txt
