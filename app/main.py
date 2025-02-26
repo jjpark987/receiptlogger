@@ -1,12 +1,10 @@
 import customtkinter as ctk
 import gspread
 import os
-import subprocess
-import traceback
 from datetime import datetime
 from dotenv import load_dotenv
 from google.oauth2.service_account import Credentials
-# from paddleocr import PaddleOCR
+from paddleocr import PaddleOCR
 from PIL import Image, ImageTk
 from app.process_data import process
 
@@ -19,10 +17,10 @@ class ReceiptLogger:
         self.create_ui()
 
     def initialize_variables(self, root):
-        # self.ocr = PaddleOCR(use_angle_cls=True, lang='en')
+        self.ocr = PaddleOCR(use_angle_cls=True, lang='en')
         self.root = root
         self.root.title('ReceiptLogger')
-        self.receipts_folder = os.path.join(os.path.expanduser('~'), 'Desktop', 'PUT YO RECEIPTS HERE')
+        self.receipts_folder = os.path.join(os.path.expanduser('~'), 'Desktop', '🧾 RECEIPTS HERE')
         self.image_refs = []
         self.receipt_data_refs = []
 
@@ -77,14 +75,9 @@ class ReceiptLogger:
         image_files = [os.path.join(self.receipts_folder, f) for f in os.listdir(self.receipts_folder) if f.lower().endswith('.png')]
         self.status_label.configure(text=f'✅ Found {len(image_files)} receipts')
 
-        def run_ocr(img_path):
-            command = f'docker exec receiptlogger python3 -m paddleocr --image_dir {img_path} --use_angle_cls true'
-            result = subprocess.run(command, shell=True, capture_output=True, text=True)
-            return result.stdout
-
         for img_path in image_files:
             try:
-                ocr_output = run_ocr(img_path) 
+                ocr_output = self.ocr.ocr(img_path) 
                 receipt_data = process(ocr_output) 
             except Exception as e:
                 self.status_label.configure(text=f'❌ Error processing receipts: {str(e)}')
@@ -238,7 +231,6 @@ class ReceiptLogger:
                 self.status_label.configure(text='⚠️ No data to upload')
 
         except Exception as e:
-            # traceback.print_exc()
             print(f'❌ Google Sheets connection error: {e}')
             self.status_label.configure(text='❌ Google Sheets authentication failed')
 

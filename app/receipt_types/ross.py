@@ -58,7 +58,8 @@ def parse_ross_receipt(receipt: list) -> dict:
             subtotal = find_price_next_line(receipt, i)
 
         if 'tax' in text:
-            tax_rate = round(float(re.search(SALES_TAX_PATTERN, text).group(1).strip()) / 100, 4)
+            if not tax_rate:
+                tax_rate = round(float(re.search(SALES_TAX_PATTERN, text).group(1).strip()) / 100, 4)
             tax += round(find_price_next_line(receipt, i), 2)
 
         if 'total' in text:

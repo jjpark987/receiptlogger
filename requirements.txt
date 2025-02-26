@@ -4,7 +4,6 @@ google-auth==2.38.0
 gspread==6.1.4
 paddleocr==2.9.1
 pillow==11.1.0
-py2app==0.28.8
 python-dotenv==1.0.1
 setuptools==75.8.0
 
