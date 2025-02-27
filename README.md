@@ -1,6 +1,6 @@
 # ReceiptLogger
 
-This repository contains the model, API, and UI for ReceiptLogger.
+This repository contains the model, API, and UI for ReceiptLogger. For a detailed write-up on how this works, check out my [post](https://dev.to/jjpark987/building-a-lightweight-ocr-powered-receipt-parser-1k21) on Dev.
 
 ## Getting Started
 
