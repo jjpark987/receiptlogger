@@ -28,10 +28,6 @@ brew install tcl-tk@8
 /opt/homebrew/opt/python@3.12/bin/python3.12 -m venv .venv
 ```
 
-```zsh
-/usr/local/opt/python@3.12/bin/python3.12 -m venv .venv
-```
-
 4. Activate virtual environment
 
 ```zsh
