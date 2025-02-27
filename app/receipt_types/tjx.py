@@ -51,7 +51,8 @@ def parse_tjx_receipt(receipt: list) -> dict:
                 elif 'subtotal' in prev_line:
                     subtotal = round(price, 2)
                 elif 'tax' in prev_line:
-                    tax_rate = round(float(re.search(SALES_TAX_PATTERN, prev_line).group(1).strip()) / 100, 4)
+                    if not tax_rate:
+                        tax_rate = round(float(re.search(SALES_TAX_PATTERN, prev_line).group(1).strip()) / 100, 4)
                     tax = round(price, 2)
                 elif 'total' in prev_line:
                     total = round(price, 2)
